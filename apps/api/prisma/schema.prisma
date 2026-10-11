@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Worker {
+  id         String   @id @default(uuid())
+  name       String
+  trade      String
+  experience Int
+  area       String
+  verified   Boolean  @default(false)
+  phone      String   @unique
+  password   String
+  about      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  isFeatured     Boolean   @default(false)
+  featuredUntil  DateTime?
+  averageRating  Float     @default(0)
+  totalReviews   Int       @default(0)
+  leads          Lead[]
+  payments       Payment[]
+  reviews        Review[]
+  bookings       Booking[]
+}
+
+model Lead {
+  id        String   @id @default(uuid())
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id])
+  type      String   // 'call' or 'whatsapp'
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  workerId        String
+  worker          Worker   @relation(fields: [workerId], references: [id])
+  razorpayOrderId String   @unique
+  razorpayPaymentId String?
+  amount          Int
+  status          String   @default("CREATED") // CREATED, SUCCESS, FAILED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  workerId   String
+  worker     Worker   @relation(fields: [workerId], references: [id])
+  customerName String
+  rating     Int      // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  workerId        String
+  worker          Worker   @relation(fields: [workerId], references: [id])
+  customerName    String
+  customerPhone   String
+  date            DateTime
+  amount          Int
+  status          String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  escrowStatus    String   @default("HELD") // HELD, RELEASED, REFUNDED
+  razorpayOrderId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
